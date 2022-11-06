@@ -1,39 +1,48 @@
-import json
-
-import joblib
-
+import dill
 import pandas as pd
-
 from fastapi import FastAPI
 from pydantic import BaseModel
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run(app='main:app', host="127.0.0.1", port=8000, log_level="info", reload=True)
 
 app = FastAPI()
-model = joblib.load('model/loan_pipe.pkl')
+
+with open('model/cars_pipe.pkl', 'rb') as file:
+   model = dill.load(file)
 
 
 class Form(BaseModel):
-    Loan_ID: str
-    Gender: str
-    Married: str
-    Dependents: str
-    Education: str
-    Self_Employed: str
-    ApplicantIncome: float
-    CoapplicantIncome: float
-    LoanAmount: float
-    Loan_Amount_Term: float
-    Credit_History: int
-    Property_Area: str
+    description: str
+    fuel: str
+    id: int
+    image_url: str
+    lat: float
+    long: float
+    manufacturer: str
+    model: str
+    odometer: int
+    posting_date: str
+    price: int
+    region: str
+    region_url: str
+    state: str
+    title_status: str
+    transmission: str
+    url: str
+    year: int
 
 
 class Prediction(BaseModel):
-    Loan_ID: str
-    Result: float
+    id: int
+    price_category: str
+    price: int
 
 
 @app.get('/status')
 def status():
-    return "I'm OK"
+    return "Service Working"
 
 
 @app.get('/version')
@@ -47,8 +56,9 @@ def predict(form: Form):
     y = model['model'].predict(df)
 
     return {
-        'Loan_ID': form.Loan_ID,
-        'Result': y[0]
+        'id': form.id,
+        'price_category': y[0],
+        'price': form.price
     }
 
 
